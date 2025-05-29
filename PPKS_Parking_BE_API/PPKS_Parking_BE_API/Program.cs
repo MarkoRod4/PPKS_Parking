@@ -17,12 +17,52 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(x =>
+    {
+        x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        x.JsonSerializerOptions.WriteIndented = true;
+    });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+// Dozvole za front
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
+
+
 var app = builder.Build();
+
+app.UseCors("AllowFrontend");
+
+//app.UseHttpsRedirection();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ApplicationDbContext>();
+
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+    await SeedRolesAndUsersAsync(roleManager, userManager);
+    await SeedParkingDataAsync(context);
+}
+
+// Dozvola za front
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -33,8 +73,98 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+
+async Task SeedRolesAndUsersAsync(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
+{
+    // Dodaj uloge ako ne postoje
+
+    string[] roles = new[] { "ADMIN" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+
+    // Seed ADMIN
+
+    var adminEmail = "admin@example.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser 
+        { 
+            UserName = adminEmail, 
+            Email = adminEmail, 
+            EmailConfirmed = true
+        };
+
+        await userManager.CreateAsync(adminUser, "Admin123!");
+        await userManager.AddToRoleAsync(adminUser, "ADMIN");
+    }
+}
+
+async Task SeedParkingDataAsync(ApplicationDbContext context)
+{
+    // Seedanje parkinga
+
+    if (context.Parkings.Any())
+    {
+        return;
+    }
+
+    var parking1 = new Parking
+    {
+        Name = "Parking 1",
+        Blocks = new List<Block>
+        {
+            new Block
+            {
+                Name = "A",
+                ParkingSpots = Enumerable.Range(1, 5).Select(i => new ParkingSpot
+                {
+                    Name = $"A{i}",
+                    IsOccupied = false
+                }).ToList()
+            },
+            new Block
+            {
+                Name = "B",
+                ParkingSpots = Enumerable.Range(1, 3).Select(i => new ParkingSpot
+                {
+                    Name = $"B{i}",
+                    IsOccupied = false
+                }).ToList()
+            }
+        }
+    };
+
+    var parking2 = new Parking
+    {
+        Name = "Parking 2",
+        Blocks = new List<Block>
+        {
+            new Block
+            {
+                Name = "A",
+                ParkingSpots = Enumerable.Range(1, 4).Select(i => new ParkingSpot
+                {
+                    Name = $"A{i}",
+                    IsOccupied = false
+                }).ToList()
+            }
+        }
+    };
+
+    context.Parkings.AddRange(parking1, parking2);
+    await context.SaveChangesAsync();
+}

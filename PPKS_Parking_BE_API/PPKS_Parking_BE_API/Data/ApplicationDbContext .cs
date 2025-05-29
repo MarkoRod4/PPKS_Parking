@@ -11,6 +11,8 @@ namespace PPKS_Parking_BE_API.Data
         {
 
         }
-
+        public DbSet<Parking> Parkings { get; set; }
+        public DbSet<Block> Blocks { get; set; }
+        public DbSet<ParkingSpot> ParkingSpots { get; set; }
     }
 }
