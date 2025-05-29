@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PPKS_Parking_BE_API.Data;
 using PPKS_Parking_BE_API.Models;
+using System.Net.WebSockets;
+using System.Text.Json;
+using System.Text;
+using PPKS_Parking_BE_API.WebSockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +43,10 @@ builder.Services.AddCors(options =>
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
+            policy.WithOrigins("https://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
         });
 });
 
@@ -47,7 +55,39 @@ var app = builder.Build();
 
 app.UseCors("AllowFrontend");
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
+
+var webSocketOptions = new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(30),
+};
+webSocketOptions.AllowedOrigins.Add("https://localhost:3000");
+
+app.UseWebSockets(webSocketOptions);
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/ws/parking")
+    {
+        Console.WriteLine("WebSocket poziv stigao na /ws/parking");
+
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
+            await ParkingWebSocketHandler.HandleAsync(webSocket, dbContext);
+        }
+        else
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        }
+    }
+    else
+    {
+        await next();
+    }
+});
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -101,10 +141,10 @@ async Task SeedRolesAndUsersAsync(RoleManager<IdentityRole> roleManager, UserMan
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
     {
-        adminUser = new ApplicationUser 
-        { 
-            UserName = adminEmail, 
-            Email = adminEmail, 
+        adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
             EmailConfirmed = true
         };
 
