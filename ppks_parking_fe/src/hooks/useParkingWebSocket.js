@@ -5,8 +5,8 @@ export function useParkingWebSocket(initialData = []) {
   const [isLive, setIsLive] = useState(true);
 
   useEffect(() => {
-    const socket = new WebSocket('wss://localhost:7206/ws/parking');
-
+    const socket = new WebSocket('ws://localhost:5077/ws/parking');
+    
     socket.onopen = () => {
       console.log('✅ WebSocket konekcija otvorena.');
       setIsLive(true);
@@ -16,13 +16,16 @@ export function useParkingWebSocket(initialData = []) {
       try {
         const data = JSON.parse(event.data);
 
+        console.log("🔄 WebSocket data:", data); // 👈 Dodaj ovo!
+
         // Ako dobiješ direktno listu parkinga, možeš je direktno setati
         const updated = data?.$values ?? data ?? [];
-        const parsed = updated.map(p => ({
-          id: p.id,
-          name: p.name,
-          freeSpotsCount: p.freeSpotsCount
+        const parsed = data.map(p => ({
+          id: p.Id,
+          name: p.Name,
+          freeSpotsCount: p.FreeSpotsCount
         }));
+
 
         setParkingData(parsed);
       } catch (err) {
@@ -40,6 +43,7 @@ export function useParkingWebSocket(initialData = []) {
       setIsLive(false);
     };
 
+    
     return () => {
       socket.close();
     };

@@ -53,7 +53,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
@@ -63,6 +63,7 @@ var webSocketOptions = new WebSocketOptions
     KeepAliveInterval = TimeSpan.FromSeconds(30),
 };
 webSocketOptions.AllowedOrigins.Add("https://localhost:3000");
+webSocketOptions.AllowedOrigins.Add("http://localhost:3000");
 
 app.UseWebSockets(webSocketOptions);
 
@@ -112,7 +113,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();

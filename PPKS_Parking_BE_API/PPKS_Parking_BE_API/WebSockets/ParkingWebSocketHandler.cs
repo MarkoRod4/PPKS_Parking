@@ -1,11 +1,16 @@
-﻿using System.Net.WebSockets;
-using System.Text;
-using System.Text.Json;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PPKS_Parking_BE_API.Data;
+using System.Net.WebSockets;
+using System.Text;
+using System.Text.Json;
 
 namespace PPKS_Parking_BE_API.WebSockets
 {
+    [AllowAnonymous]
+    [Route("/ws/parking")]
+
     public static class ParkingWebSocketHandler
     {
         public static async Task HandleAsync(WebSocket webSocket, ApplicationDbContext context)
@@ -28,24 +33,33 @@ namespace PPKS_Parking_BE_API.WebSockets
 
             while (webSocket.State == WebSocketState.Open && await timer.WaitForNextTickAsync())
             {
-                var parkings = await context.Parkings
-                    .Include(p => p.Blocks)
-                        .ThenInclude(b => b.ParkingSpots)
-                    .ToListAsync();
-
-                var data = parkings.Select(p => new
+                try
                 {
-                    p.Id,
-                    p.Name,
-                    p.FreeSpotsCount
-                });
+                    var parkings = await context.Parkings
+                        .Include(p => p.Blocks)
+                            .ThenInclude(b => b.ParkingSpots)
+                        .ToListAsync();
 
-                var json = JsonSerializer.Serialize(data);
-                var bytes = Encoding.UTF8.GetBytes(json);
-                var segment = new ArraySegment<byte>(bytes);
+                    var data = parkings.Select(p => new
+                    {
+                        p.Id,
+                        p.Name,
+                        p.FreeSpotsCount
+                    });
 
-                await webSocket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+                    var json = JsonSerializer.Serialize(data);
+                    var bytes = Encoding.UTF8.GetBytes(json);
+                    var segment = new ArraySegment<byte>(bytes);
+
+                    await webSocket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ Greška prilikom slanja preko WebSocketa: {ex.Message}");
+                    break; // Izlazak iz petlje i zatvaranje konekcije
+                }
             }
+
 
             await receiveTask;
         }

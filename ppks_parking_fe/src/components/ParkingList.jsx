@@ -1,6 +1,7 @@
 import React from "react";
 
 const ParkingList = ({ parkings }) => {
+    //console.log("🎯 Parking data:", parkings);
   return (
     <div className="grid gap-4">
       {parkings.map(p => (
