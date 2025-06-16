@@ -49,7 +49,6 @@ namespace PPKS_Parking_BE_API.Controllers
                     return NotFound("Parking nije pronađen.");
 
                 var allSpots = parking.Blocks.SelectMany(b => b.ParkingSpots).ToList();
-
                 var totalSpots = allSpots.Count;
                 var freeSpots = parking.FreeSpotsCount;
                 var occupiedSpots = totalSpots - freeSpots;
@@ -60,25 +59,38 @@ namespace PPKS_Parking_BE_API.Controllers
                     .Where(log => spotIds.Contains(log.ParkingSpotId))
                     .ToListAsync();
 
-                var weeklyStats = logs
-                    .GroupBy(l => l.Timestamp.DayOfWeek)
-                    .Select(g => new {
-                        Day = g.Key.ToString(),
-                        TotalRecords = g.Count(),
-                        AvgOccupiedPercent = g.Count(x => x.IsOccupied) * 100 / g.Count()
-                    })
-                    .ToList();
+                // Svi dani u tjednu
+                var allDays = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().ToList();
 
-                var dailyStats = logs
-                    .GroupBy(l => new { l.Timestamp.DayOfWeek, Hour = l.Timestamp.Hour })
-                    .Select(g => new {
-                        Day = g.Key.DayOfWeek.ToString(),
-                        Hour = g.Key.Hour,
-                        TotalRecords = g.Count(),
-                        AvgOccupiedPercent = g.Count(x => x.IsOccupied) * 100 / g.Count()
-                    })
-                    .OrderBy(x => x.Day).ThenBy(x => x.Hour)
-                    .ToList();
+                var weeklyStats = allDays.Select(day =>
+                {
+                    var logsForDay = logs.Where(l => l.Timestamp.DayOfWeek == day).ToList();
+                    var total = logsForDay.Count;
+                    return new
+                    {
+                        Day = day.ToString(),
+                        TotalRecords = total,
+                        AvgOccupiedPercent = total > 0 ? logsForDay.Count(l => l.IsOccupied) * 100 / total : (int?)null
+                    };
+                }).ToList();
+
+                // Dnevna statistika: 7 dana * 24 sata
+                var dailyStats = new List<object>();
+                foreach (var day in allDays)
+                {
+                    for (int hour = 0; hour < 24; hour++)
+                    {
+                        var group = logs.Where(l => l.Timestamp.DayOfWeek == day && l.Timestamp.Hour == hour).ToList();
+                        var count = group.Count;
+                        dailyStats.Add(new
+                        {
+                            Day = day.ToString(),
+                            Hour = hour,
+                            TotalRecords = count,
+                            AvgOccupiedPercent = count > 0 ? group.Count(l => l.IsOccupied) * 100 / count : (int?)null
+                        });
+                    }
+                }
 
                 return Ok(new
                 {
@@ -87,17 +99,8 @@ namespace PPKS_Parking_BE_API.Controllers
                     TotalSpots = totalSpots,
                     OccupiedSpots = occupiedSpots,
                     FreeSpots = freeSpots,
-                    WeeklyStats = weeklyStats.Select(w => new {
-                        w.Day,
-                        w.TotalRecords,
-                        w.AvgOccupiedPercent
-                    }),
-                    DailyStats = dailyStats.Select(d => new {
-                        d.Day,
-                        d.Hour,
-                        d.TotalRecords,
-                        d.AvgOccupiedPercent
-                    })
+                    WeeklyStats = weeklyStats,
+                    DailyStats = dailyStats
                 });
             }
             catch (Exception ex)
@@ -106,10 +109,6 @@ namespace PPKS_Parking_BE_API.Controllers
                 return StatusCode(500, "Greška na serveru");
             }
         }
-
-
-
-
     }
 }
 

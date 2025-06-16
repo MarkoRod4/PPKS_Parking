@@ -6,6 +6,7 @@ import ParkingList from "../components/ParkingList";
 const Index = () => {
   const [initialData, setInitialData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [readyData, setReadyData] = useState(null);
 
   useEffect(() => {
     fetchParkings()
@@ -16,9 +17,9 @@ const Index = () => {
           name: p.name,
           freeSpotsCount: p.freeSpotsCount
         }));
-        console.log(enriched);
         setInitialData(enriched);
         setLoading(false);
+        setReadyData(enriched);
       })
       .catch(err => {
         console.error("Greška:", err);
@@ -26,9 +27,9 @@ const Index = () => {
       });
   }, []);
 
- const parkings = useParkingWebSocket(initialData);
+  const parkings = useParkingWebSocket(readyData || []);
 
-  if (loading) return <p>Učitavanje...</p>;
+  if (loading || !readyData) return <p>Učitavanje...</p>;
 
   return (
     <div className="p-4">
@@ -37,5 +38,6 @@ const Index = () => {
     </div>
   );
 };
+
 
 export default Index;

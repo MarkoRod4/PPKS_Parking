@@ -10,6 +10,7 @@ export default function ParkingDetails() {
   const [parking, setParking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedDay, setSelectedDay] = useState("Monday");
 
   useEffect(() => {
     async function fetchParking() {
@@ -31,6 +32,16 @@ export default function ParkingDetails() {
   if (loading) return <p>Učitavanje...</p>;
   if (error) return <p>Greška: {error}</p>;
   if (!parking) return null;
+
+  // Filtriraj dnevne statistike po odabranom danu
+  const dailyStatsByDay = parking.dailyStats.filter(
+    (stat) => stat.day === selectedDay
+  );
+
+  const allDays = [
+    "Monday", "Tuesday", "Wednesday", "Thursday",
+    "Friday", "Saturday", "Sunday"
+  ];
 
   return (
     <div>
@@ -57,29 +68,55 @@ export default function ParkingDetails() {
             <tr key={dayStat.day}>
               <td>{dayStat.day}</td>
               <td>{dayStat.totalRecords}</td>
-              <td>{dayStat.avgOccupiedPercent.toFixed(2)}</td>
+              <td>
+                {dayStat.avgOccupiedPercent == null
+                  ? "N/A"
+                  : `${dayStat.avgOccupiedPercent}%`}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
 
       <h2 style={{ marginTop: 20 }}>Dnevna statistika po satima</h2>
+
+      <div style={{ marginBottom: 10 }}>
+        {allDays.map((day) => (
+          <button
+            key={day}
+            onClick={() => setSelectedDay(day)}
+            style={{
+              marginRight: 8,
+              padding: "5px 10px",
+              backgroundColor: day === selectedDay ? "#ccc" : "#f0f0f0",
+              border: "1px solid #aaa",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            {day}
+          </button>
+        ))}
+      </div>
+
       <table border="1" cellPadding="5" style={{ borderCollapse: "collapse" }}>
         <thead>
           <tr>
-            <th>Dan</th>
             <th>Sati</th>
             <th>Ukupno zapisa</th>
             <th>Prosječna zauzetost (%)</th>
           </tr>
         </thead>
         <tbody>
-          {parking.dailyStats.map((hourStat, idx) => (
+          {dailyStatsByDay.map((hourStat, idx) => (
             <tr key={idx}>
-              <td>{hourStat.day}</td>
               <td>{hourStat.hour}:00</td>
               <td>{hourStat.totalRecords}</td>
-              <td>{hourStat.avgOccupiedPercent.toFixed(2)}</td>
+              <td>
+                {hourStat.avgOccupiedPercent == null
+                  ? "N/A"
+                  : `${hourStat.avgOccupiedPercent}%`}
+              </td>
             </tr>
           ))}
         </tbody>
