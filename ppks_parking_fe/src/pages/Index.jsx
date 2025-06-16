@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { fetchParkings } from "../api/parking";
 import { useParkingWebSocket } from "../hooks/useParkingWebSocket";
-import ParkingList from "../components/ParkingList";
+import ParkingList from "../components/ParkingList.jsx";
+import "./index.css";
 
 const Index = () => {
   const [initialData, setInitialData] = useState([]);
@@ -32,8 +33,8 @@ const Index = () => {
   if (loading || !readyData) return <p>Učitavanje...</p>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl mb-4">Pregled parkinga</h1>
+    <div className="index-container">
+      <h1 className="index-title">Pregled parkinga</h1>
       <ParkingList parkings={parkings} />
     </div>
   );

@@ -1,0 +1,30 @@
+.parking-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.parking-card-link:hover {
+  background-color: #e6e6e6;
+  cursor: pointer;
+}
+
+.occupancy-low {
+  background-color: #d6f5d6;
+  border-color: #a3d9a5;
+}
+
+.occupancy-medium {
+  background-color: #fff8d6;
+  border-color: #e4d392;
+}
+
+.occupancy-high {
+  background-color: #f5d6d6;
+  border-color: #d39292;
+}

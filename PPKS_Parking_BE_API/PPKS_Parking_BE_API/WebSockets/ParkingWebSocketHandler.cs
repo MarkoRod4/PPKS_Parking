@@ -44,7 +44,8 @@ namespace PPKS_Parking_BE_API.WebSockets
                     {
                         p.Id,
                         p.Name,
-                        p.FreeSpotsCount
+                        p.FreeSpotsCount,
+                        p.Occupancy
                     });
 
                     var json = JsonSerializer.Serialize(data);

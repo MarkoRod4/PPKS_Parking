@@ -1,0 +1,46 @@
+.details-container {
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.back-button {
+  margin-bottom: 20px;
+  padding: 6px 12px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.day-button {
+  margin-right: 8px;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.day-button.active {
+  background-color: #ccc;
+}
+
+.details-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.details-table th,
+.details-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+.details-heading {
+  margin-top: 24px;
+  font-size: 18px;
+  font-weight: bold;
+}

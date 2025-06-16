@@ -16,7 +16,9 @@ export function useParkingWebSocket(initialData = []) {
         const parsed = data.map(p => ({
           id: p.Id,
           name: p.Name,
-          freeSpotsCount: p.FreeSpotsCount
+          freeSpotsCount: p.FreeSpotsCount,
+          occupancy: p.Occupancy
+          
         }));
 
 

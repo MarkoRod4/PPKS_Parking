@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using PPKS_Parking_BE_API;
 using PPKS_Parking_BE_API.Data;
 using PPKS_Parking_BE_API.Models;
 using PPKS_Parking_BE_API.WebSockets;
@@ -34,7 +35,6 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 // Dozvole za front
 
 builder.Services.AddCors(options =>
@@ -55,11 +55,10 @@ builder.Services.AddCors(options =>
 
 
 var app = builder.Build();
-
 //app.UseHttpsRedirection();
-
 app.UseCors("AllowFrontend");
 
+// WebSocket setup
 
 var webSocketOptions = new WebSocketOptions
 {
@@ -101,23 +100,16 @@ using (var scope = app.Services.CreateScope())
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-    await SeedRolesAndUsersAsync(roleManager, userManager);
-    await SeedParkingDataAsync(context);
-    await SeedParkingLogsAsync(context);
+    await SeedScripts.SeedRolesAndUsersAsync(roleManager, userManager);
+    await SeedScripts.SeedParkingDataAsync(context);
+    await SeedScripts.SeedParkingLogsAsync(context);
 }
 
-// Dozvola za front
-
-
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -125,134 +117,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-
-async Task SeedRolesAndUsersAsync(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
-{
-    // Dodaj uloge ako ne postoje
-
-    string[] roles = new[] { "ADMIN" };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-        }
-    }
-
-    // Seed ADMIN
-
-    var adminEmail = "admin@example.com";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-    if (adminUser == null)
-    {
-        adminUser = new ApplicationUser
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            EmailConfirmed = true
-        };
-
-        await userManager.CreateAsync(adminUser, "Admin123!");
-        await userManager.AddToRoleAsync(adminUser, "ADMIN");
-    }
-}
-
-async Task SeedParkingDataAsync(ApplicationDbContext context)
-{
-    // Seedanje parkinga
-
-    if (context.Parkings.Any())
-    {
-        return;
-    }
-
-    var parking1 = new Parking
-    {
-        Name = "Parking 1",
-        Blocks = new List<Block>
-        {
-            new Block
-            {
-                Name = "A",
-                ParkingSpots = Enumerable.Range(1, 5).Select(i => new ParkingSpot
-                {
-                    Name = $"A{i}",
-                    IsOccupied = false
-                }).ToList()
-            },
-            new Block
-            {
-                Name = "B",
-                ParkingSpots = Enumerable.Range(1, 3).Select(i => new ParkingSpot
-                {
-                    Name = $"B{i}",
-                    IsOccupied = false
-                }).ToList()
-            }
-        }
-    };
-
-    var parking2 = new Parking
-    {
-        Name = "Parking 2",
-        Blocks = new List<Block>
-        {
-            new Block
-            {
-                Name = "A",
-                ParkingSpots = Enumerable.Range(1, 4).Select(i => new ParkingSpot
-                {
-                    Name = $"A{i}",
-                    IsOccupied = false
-                }).ToList()
-            }
-        }
-    };
-
-    context.Parkings.AddRange(parking1, parking2);
-    await context.SaveChangesAsync();
-}
-
-async Task SeedParkingLogsAsync(ApplicationDbContext context)
-{
-    // Seed podataka logova
-
-    if (!context.Parkings.Any())
-        return;
-
-    if (context.ParkingSpotUsageLogs.Any())
-        return;
-
-    var random = new Random();
-
-    var startDate = DateTime.Now.Date.AddDays(-7);
-    var endDate = DateTime.Now.Date;
-
-    var allSpots = await context.ParkingSpots.ToListAsync();
-
-    var logs = new List<ParkingSpotUsageLog>();
-
-    foreach (var spot in allSpots)
-    {
-        var timestamp = startDate;
-
-        while (timestamp < endDate)
-        {
-            bool isOccupied = random.NextDouble() < 0.3;
-
-            logs.Add(new ParkingSpotUsageLog
-            {
-                ParkingSpotId = spot.Id,
-                IsOccupied = isOccupied,
-                Timestamp = timestamp
-            });
-
-            timestamp = timestamp.AddHours(1);
-        }
-    }
-    context.ParkingSpotUsageLogs.AddRange(logs);
-    await context.SaveChangesAsync();
-}
-
