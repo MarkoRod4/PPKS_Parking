@@ -103,6 +103,7 @@ using (var scope = app.Services.CreateScope())
 
     await SeedRolesAndUsersAsync(roleManager, userManager);
     await SeedParkingDataAsync(context);
+    await SeedParkingLogsAsync(context);
 }
 
 // Dozvola za front
@@ -213,3 +214,45 @@ async Task SeedParkingDataAsync(ApplicationDbContext context)
     context.Parkings.AddRange(parking1, parking2);
     await context.SaveChangesAsync();
 }
+
+async Task SeedParkingLogsAsync(ApplicationDbContext context)
+{
+    // Seed podataka logova
+
+    if (!context.Parkings.Any())
+        return;
+
+    if (context.ParkingSpotUsageLogs.Any())
+        return;
+
+    var random = new Random();
+
+    var startDate = DateTime.Now.Date.AddDays(-7);
+    var endDate = DateTime.Now.Date;
+
+    var allSpots = await context.ParkingSpots.ToListAsync();
+
+    var logs = new List<ParkingSpotUsageLog>();
+
+    foreach (var spot in allSpots)
+    {
+        var timestamp = startDate;
+
+        while (timestamp < endDate)
+        {
+            bool isOccupied = random.NextDouble() < 0.3;
+
+            logs.Add(new ParkingSpotUsageLog
+            {
+                ParkingSpotId = spot.Id,
+                IsOccupied = isOccupied,
+                Timestamp = timestamp
+            });
+
+            timestamp = timestamp.AddHours(1);
+        }
+    }
+    context.ParkingSpotUsageLogs.AddRange(logs);
+    await context.SaveChangesAsync();
+}
+
