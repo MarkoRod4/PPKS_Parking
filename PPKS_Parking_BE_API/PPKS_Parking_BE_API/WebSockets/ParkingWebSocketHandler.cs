@@ -10,10 +10,9 @@ namespace PPKS_Parking_BE_API.WebSockets
 {
     [AllowAnonymous]
     [Route("/ws/parking")]
-
     public static class ParkingWebSocketHandler
     {
-        public static async Task HandleAsync(WebSocket webSocket, ApplicationDbContext context)
+        public static async Task HandleAsync(WebSocket webSocket, IServiceProvider services)
         {
             var buffer = new byte[1024 * 8];
             var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
@@ -35,6 +34,9 @@ namespace PPKS_Parking_BE_API.WebSockets
             {
                 try
                 {
+                    using var scope = services.CreateScope();
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
                     var parkings = await context.Parkings
                         .Include(p => p.Blocks)
                             .ThenInclude(b => b.ParkingSpots)
@@ -56,16 +58,15 @@ namespace PPKS_Parking_BE_API.WebSockets
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error WebSocketa: {ex.Message}");
-                    break; // Izlazak iz petlje i zatvaranje konekcije
+                    // Console.WriteLine($"Error WebSocketa: {ex.Message}");
+                    break;
                 }
             }
-
 
             await receiveTask;
         }
 
-        public static async Task HandleSingleAsync(WebSocket webSocket, ApplicationDbContext context, int parkingId)
+        public static async Task HandleSingleAsync(WebSocket webSocket, IServiceProvider services, int parkingId)
         {
             var buffer = new byte[1024 * 8];
             var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
@@ -87,6 +88,9 @@ namespace PPKS_Parking_BE_API.WebSockets
             {
                 try
                 {
+                    using var scope = services.CreateScope();
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
                     var parking = await context.Parkings
                         .Include(p => p.Blocks)
                             .ThenInclude(b => b.ParkingSpots)
@@ -110,15 +114,12 @@ namespace PPKS_Parking_BE_API.WebSockets
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error WebSocketa (/ws/singleparking): {ex.Message}");
+                    // Console.WriteLine($"Error WebSocketa (/ws/singleparking): {ex.Message}");
                     break;
                 }
             }
 
             await receiveTask;
         }
-
-
-
     }
 }

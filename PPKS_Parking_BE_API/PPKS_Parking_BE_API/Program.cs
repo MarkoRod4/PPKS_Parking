@@ -74,13 +74,15 @@ app.Use(async (context, next) =>
 {
     if (context.Request.Path == "/ws/parking")
     {
-        Console.WriteLine("WebSocket poziv stigao na /ws/parking");
+        // Index view socket
+
+        // Console.WriteLine("WebSocket poziv stigao na /ws/parking");
 
         if (context.WebSockets.IsWebSocketRequest)
         {
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
-            await ParkingWebSocketHandler.HandleAsync(webSocket, dbContext);
+            var services = context.RequestServices;
+            await ParkingWebSocketHandler.HandleAsync(webSocket, services);
         }
         else
         {
@@ -89,7 +91,9 @@ app.Use(async (context, next) =>
     }
     else if (context.Request.Path == "/ws/singleparking")
     {
-        Console.WriteLine("WebSocket poziv stigao na /ws/singleparking");
+        // Details view socket
+
+        // Console.WriteLine("WebSocket poziv stigao na /ws/singleparking");
 
         if (context.WebSockets.IsWebSocketRequest)
         {
@@ -102,8 +106,8 @@ app.Use(async (context, next) =>
             }
 
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
-            await ParkingWebSocketHandler.HandleSingleAsync(webSocket, dbContext, parkingId);
+            var services = context.RequestServices;
+            await ParkingWebSocketHandler.HandleSingleAsync(webSocket, services, parkingId);
         }
         else
         {
@@ -116,8 +120,11 @@ app.Use(async (context, next) =>
     }
 });
 
+
 using (var scope = app.Services.CreateScope())
 {
+    // Seed data
+
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
 

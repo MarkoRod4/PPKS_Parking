@@ -5,7 +5,6 @@ import ParkingList from "../components/ParkingList.jsx";
 import "./index.css";
 
 const Index = () => {
-  const [initialData, setInitialData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [readyData, setReadyData] = useState(null);
 
@@ -16,11 +15,10 @@ const Index = () => {
         const enriched = values.map(p => ({
           id: p.id,
           name: p.name,
-          freeSpotsCount: p.freeSpotsCount
+          freeSpotsCount: p.freeSpotsCount,
         }));
-        setInitialData(enriched);
-        setLoading(false);
         setReadyData(enriched);
+        setLoading(false);
       })
       .catch(err => {
         console.error("Greška:", err);
@@ -39,6 +37,5 @@ const Index = () => {
     </div>
   );
 };
-
 
 export default Index;

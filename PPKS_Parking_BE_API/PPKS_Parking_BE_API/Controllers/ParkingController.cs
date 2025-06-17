@@ -59,7 +59,6 @@ namespace PPKS_Parking_BE_API.Controllers
                     .Where(log => spotIds.Contains(log.ParkingSpotId))
                     .ToListAsync();
 
-                // Svi dani u tjednu
                 var allDays = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().ToList();
 
                 var weeklyStats = allDays.Select(day =>
@@ -74,7 +73,6 @@ namespace PPKS_Parking_BE_API.Controllers
                     };
                 }).ToList();
 
-                // Dnevna statistika: 7 dana * 24 sata
                 var dailyStats = new List<object>();
                 foreach (var day in allDays)
                 {
@@ -104,7 +102,7 @@ namespace PPKS_Parking_BE_API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Greška: " + ex.Message);
+                //Console.WriteLine("Greška: " + ex.Message);
                 return StatusCode(500, "Greška na serveru");
             }
         }

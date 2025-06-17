@@ -34,14 +34,21 @@ const liveData = useSingleParkingWebSocket(id);
   }, [id]);
 
   useEffect(() => {
-    if (liveData && parking) {
-      setParking((prev) => ({
-        ...prev,
-        freeSpotsCount: liveData.freeSpotsCount,
-        occupancy: liveData.occupancy,
-      }));
-    }
-  }, [liveData]);
+  if (liveData) {
+    setParking((prev) =>
+      prev
+        ? {
+            ...prev,
+            freeSpotsCount: liveData.freeSpotsCount,
+            occupancy: liveData.occupancy,
+          }
+        : prev
+    );
+  }
+}, [liveData]);
+
+
+
 
   if (loading) return <p>Učitavanje...</p>;
   if (error) return <p>Greška: {error}</p>;
@@ -64,11 +71,11 @@ const liveData = useSingleParkingWebSocket(id);
 
       <div
         className={`parking-card ${
-          parking.occupancy < 50
-            ? "low-occupancy"
-            : parking.occupancy < 80
-            ? "medium-occupancy"
-            : "high-occupancy"
+          parking.occupancy <= 50
+            ? "occupancy-low"
+            : parking.occupancy <= 80
+            ? "occupancy-medium"
+            : "occupancy-high"
         }`}
       >
         <h2>{parking.name}</h2>

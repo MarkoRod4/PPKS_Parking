@@ -48,7 +48,7 @@ public class SensorSimulatorService : BackgroundService
             }
 
             await dbContext.SaveChangesAsync(stoppingToken);
-
+            // 5 minuta trigger - dovoljno za simulaciju i relativno realno
             await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
         }
     }
