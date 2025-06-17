@@ -53,6 +53,7 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddHostedService<SensorSimulatorService>();
 
 var app = builder.Build();
 //app.UseHttpsRedirection();
