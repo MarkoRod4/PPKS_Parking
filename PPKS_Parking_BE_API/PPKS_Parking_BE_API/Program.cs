@@ -86,6 +86,29 @@ app.Use(async (context, next) =>
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
         }
     }
+    else if (context.Request.Path == "/ws/singleparking")
+    {
+        Console.WriteLine("WebSocket poziv stigao na /ws/singleparking");
+
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            var query = context.Request.Query;
+            if (!query.TryGetValue("id", out var idValues) || !int.TryParse(idValues.FirstOrDefault(), out var parkingId))
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsync("Nedostaje ili je nevazeci 'id' parametar.");
+                return;
+            }
+
+            using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
+            await ParkingWebSocketHandler.HandleSingleAsync(webSocket, dbContext, parkingId);
+        }
+        else
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        }
+    }
     else
     {
         await next();

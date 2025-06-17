@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import "./ParkingDetails.css"; // 👈 dodaj ovo
+import "./ParkingDetails.css";
+import { useSingleParkingWebSocket } from "../hooks/useSingleParkingWebSocket";
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -12,6 +13,8 @@ export default function ParkingDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDay, setSelectedDay] = useState("Monday");
+
+const liveData = useSingleParkingWebSocket(id);
 
   useEffect(() => {
     async function fetchParking() {
@@ -30,6 +33,16 @@ export default function ParkingDetails() {
     fetchParking();
   }, [id]);
 
+  useEffect(() => {
+    if (liveData && parking) {
+      setParking((prev) => ({
+        ...prev,
+        freeSpotsCount: liveData.freeSpotsCount,
+        occupancy: liveData.occupancy,
+      }));
+    }
+  }, [liveData]);
+
   if (loading) return <p>Učitavanje...</p>;
   if (error) return <p>Greška: {error}</p>;
   if (!parking) return null;
@@ -40,33 +53,46 @@ export default function ParkingDetails() {
 
   const allDays = [
     "Monday", "Tuesday", "Wednesday", "Thursday",
-    "Friday", "Saturday", "Sunday"
+    "Friday", "Saturday", "Sunday",
   ];
 
   return (
     <div className="details-container">
-      <button className="back-button" onClick={() => navigate(-1)}>← Nazad</button>
+      <button className="back-button" onClick={() => navigate(-1)}>
+        ← Nazad
+      </button>
 
-      <h1>{parking.name}</h1>
-      <p>Ukupno mjesta: {parking.totalSpots}</p>
-      <p>Zauzeto: {parking.occupiedSpots}</p>
-      <p>Slobodno: {parking.freeSpots}</p>
+      <div
+        className={`parking-card ${
+          parking.occupancy < 50
+            ? "low-occupancy"
+            : parking.occupancy < 80
+            ? "medium-occupancy"
+            : "high-occupancy"
+        }`}
+      >
+        <h2>{parking.name}</h2>
+        <p>Slobodna mjesta: {parking.freeSpotsCount}</p>
+        <p>Popunjenost: {parking.occupancy}%</p>
+      </div>
 
       <h2 className="details-heading">Tjedna statistika</h2>
       <table className="details-table">
         <thead>
           <tr>
             <th>Dan</th>
-            {/* <th>Ukupno zapisa</th> */}
-            <th>Prosječna zauzetost (%)</th>
+            <th>Prosječna popunjenost</th>
           </tr>
         </thead>
         <tbody>
           {parking.weeklyStats.map((dayStat) => (
             <tr key={dayStat.day}>
               <td>{dayStat.day}</td>
-              {/* <td>{dayStat.totalRecords}</td> */}
-              <td>{dayStat.avgOccupiedPercent == null ? "N/A" : `${dayStat.avgOccupiedPercent}%`}</td>
+              <td>
+                {dayStat.avgOccupiedPercent == null
+                  ? "N/A"
+                  : `${dayStat.avgOccupiedPercent}%`}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -74,14 +100,14 @@ export default function ParkingDetails() {
 
       <h2 className="details-heading">Dnevna statistika po satima</h2>
 
-      <div style={{ marginBottom: 10 }}>
+      <div className="day-tabs">
         {allDays.map((day) => (
           <button
             key={day}
             onClick={() => setSelectedDay(day)}
-            className={`day-button ${selectedDay === day ? "active" : ""}`}
+            className={`tab-button ${selectedDay === day ? "active" : ""}`}
           >
-            {day}
+            {day.slice(0, 3)}
           </button>
         ))}
       </div>
@@ -90,16 +116,18 @@ export default function ParkingDetails() {
         <thead>
           <tr>
             <th>Sati</th>
-            {/* <th>Ukupno zapisa</th> */}
-            <th>Prosječna zauzetost (%)</th>
+            <th>Prosječna popunjenost</th>
           </tr>
         </thead>
         <tbody>
           {dailyStatsByDay.map((hourStat, idx) => (
             <tr key={idx}>
               <td>{hourStat.hour}:00</td>
-              {/* <td>{hourStat.totalRecords}</td> */}
-              <td>{hourStat.avgOccupiedPercent == null ? "N/A" : `${hourStat.avgOccupiedPercent}%`}</td>
+              <td>
+                {hourStat.avgOccupiedPercent == null
+                  ? "N/A"
+                  : `${hourStat.avgOccupiedPercent}%`}
+              </td>
             </tr>
           ))}
         </tbody>

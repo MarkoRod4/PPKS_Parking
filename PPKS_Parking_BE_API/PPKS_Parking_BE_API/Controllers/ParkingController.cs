@@ -96,9 +96,8 @@ namespace PPKS_Parking_BE_API.Controllers
                 {
                     parking.Id,
                     parking.Name,
-                    TotalSpots = totalSpots,
-                    OccupiedSpots = occupiedSpots,
-                    FreeSpots = freeSpots,
+                    parking.FreeSpotsCount,
+                    parking.Occupancy,
                     WeeklyStats = weeklyStats,
                     DailyStats = dailyStats
                 });

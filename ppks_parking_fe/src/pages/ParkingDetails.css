@@ -44,3 +44,52 @@
   font-size: 18px;
   font-weight: bold;
 }
+
+.parking-card {
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s;
+}
+
+.low-occupancy {
+  background-color: #e0f8e9;
+}
+
+.medium-occupancy {
+  background-color: #fff8dc; 
+}
+
+.high-occupancy {
+  background-color: #ffe5e5; 
+}
+
+.day-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.tab-button {
+  flex: 1;
+  white-space: nowrap;
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border: 1px solid #bbb;
+  border-bottom: 2px solid transparent;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  transition: background-color 0.2s, border-bottom 0.2s;
+  font-size: 14px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.tab-button.active {
+  background-color: #e0f8e9;
+  border-bottom: 2px solid #4caf50;
+  font-weight: bold;
+}

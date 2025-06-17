@@ -18,7 +18,6 @@ export function useParkingWebSocket(initialData = []) {
           name: p.Name,
           freeSpotsCount: p.FreeSpotsCount,
           occupancy: p.Occupancy
-          
         }));
 
 
